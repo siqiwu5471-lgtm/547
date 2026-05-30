@@ -1,7 +1,6 @@
-<!-- SIQI WU — multi-page site. Navigation is pure JS (no URL/hash change, so the preview never reloads).
-     Home image loads async (non-blocking) with an elegant fallback if the sandbox blocks external images.
-     The image WILL appear when this page is opened in a real browser / published (e.g. GitHub Pages).
-     ABOUT photo: set --portrait-about in :root to a direct image url. -->
+<!-- SIQI WU — multi-page site. Nav is pure JS. Home is a full-bleed background image with float-on-hover icon clones.
+     Research/Projects thumbnails & About portrait use real images (raw GitHub, repo must be PUBLIC);
+     they lazy-load and fall back to a line icon if blocked (e.g. inside the claude.ai preview). -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -9,7 +8,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
 <style>
 :root{
-  --portrait-about:none;
+  --portrait-about:url("https://raw.githubusercontent.com/siqiwu5471-lgtm/547/refs/heads/main/IMG_5557.JPG");
   --serif:"Cormorant Garamond","EB Garamond",Garamond,Georgia,serif;
   --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
 }
@@ -46,12 +45,13 @@ body.lang-en .lang [data-l=en],body.lang-zh .lang [data-l=zh]{color:var(--accent
 .eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:18px}
 .wrap{max-width:1180px;margin:0 auto;padding:128px clamp(18px,4vw,46px) 90px}
 
-/* ---------- HOME (background image + clickable hotspots + elegant fallback) ---------- */
-.home-full{min-height:100vh;display:grid;place-items:center;background:#0e0b08;overflow:hidden}
-.hero-img-wrap{position:relative;aspect-ratio:3/2;width:min(100vw,calc(100vh*1.5));
-  background-size:contain;background-position:center;background-repeat:no-repeat;background-color:#0e0b08}
-.hs{position:absolute;border:none;background:transparent;cursor:pointer;border-radius:8px;transition:background .2s,box-shadow .2s;z-index:2}
-.hs:hover{background:rgba(216,178,94,.16);box-shadow:0 0 0 1px rgba(216,178,94,.45)}
+/* ---------- HOME (full-bleed image + float-on-hover icon clones + fallback) ---------- */
+.home-full{min-height:100vh;background:#0e0b08;overflow:hidden}
+.hero-img-wrap{position:relative;width:100vw;aspect-ratio:3/2;
+  background-size:cover;background-position:center;background-repeat:no-repeat;background-color:#0e0b08}
+.hs{position:absolute;border:none;background:transparent;cursor:pointer;z-index:2}
+.icon-pop{position:absolute;border:none;background-color:transparent;background-repeat:no-repeat;cursor:pointer;z-index:2;transform-origin:center;transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.icon-pop:hover{transform:scale(1.13) translateY(-3px);z-index:3}
 .home-fallback{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px}
 .home-fallback .hf-name{font-family:var(--serif);font-size:clamp(40px,8vw,72px);letter-spacing:3px;color:var(--fg)}
 .home-fallback .hf-roles{font-family:var(--serif);font-style:italic;color:var(--accent);font-size:clamp(16px,2.4vw,22px);margin-top:12px}
@@ -64,8 +64,9 @@ body.lang-en .lang [data-l=en],body.lang-zh .lang [data-l=zh]{color:var(--accent
 .idx{display:flex;flex-direction:column}
 .row{display:flex;gap:26px;align-items:flex-start;padding:26px 0;border-top:1px solid var(--line)}
 .row:first-child{border-top:none}
-.thumb{flex:0 0 auto;width:92px;height:92px;border:1px solid var(--line);border-radius:8px;display:grid;place-items:center;color:var(--gold);background:var(--card);transition:.3s}
+.thumb{position:relative;flex:0 0 auto;width:92px;height:92px;border:1px solid var(--line);border-radius:8px;display:grid;place-items:center;color:var(--gold);background:var(--card);overflow:hidden;transition:.3s}
 .thumb svg{width:64%;height:64%;overflow:visible}
+.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .row:hover .thumb{transform:translateY(-3px);border-color:var(--accent)}
 .row-main{flex:1;min-width:0}
 .row-main h3{font-family:var(--serif);font-size:clamp(18px,2.3vw,24px);font-weight:500;line-height:1.25}
@@ -79,8 +80,9 @@ body.lang-en .lang [data-l=en],body.lang-zh .lang [data-l=zh]{color:var(--accent
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;transition:.3s;display:flex;flex-direction:column}
 .card:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(0,0,0,.08)}
-.card-img{height:150px;display:grid;place-items:center;color:var(--gold);border-bottom:1px solid var(--line);background:linear-gradient(135deg,rgba(154,123,58,.08),transparent)}
+.card-img{position:relative;height:180px;display:grid;place-items:center;color:var(--gold);border-bottom:1px solid var(--line);background:linear-gradient(135deg,rgba(154,123,58,.08),transparent);overflow:hidden}
 .card-img svg{width:74px;height:74px;overflow:visible}
+.card-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .card-body{padding:20px 22px 24px}
 .card-body h3{font-family:var(--serif);font-size:21px;font-weight:500}
 .card-body p{font-size:14px;color:var(--muted);margin-top:8px;line-height:1.5}
@@ -89,17 +91,12 @@ body.lang-en .lang [data-l=en],body.lang-zh .lang [data-l=zh]{color:var(--accent
 .about h2{font-family:var(--serif);font-weight:500;font-size:clamp(40px,6vw,76px);line-height:.98}
 .about .roles{font-family:var(--serif);font-style:italic;font-size:20px;color:var(--accent);margin:10px 0 26px}
 .about p.stmt{font-size:16px;line-height:1.7;color:var(--fg)}
-.about .edu{margin-top:30px;display:flex;flex-direction:column;gap:18px}
-.about .edu .e h4{font-family:var(--serif);font-size:20px;font-weight:500}
-.about .edu .e span{font-size:13px;color:var(--muted)}
-.about .edu .e .y{color:var(--accent);font-size:12px;letter-spacing:1px}
 .about .facts{margin-top:26px;font-size:13px;line-height:1.7;color:var(--muted);border-left:2px solid var(--accent);padding-left:16px}
 .about .contact{margin-top:26px;display:flex;flex-wrap:wrap;gap:12px}
 .about .contact a{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:30px;padding:10px 16px;font-size:13px;transition:.25s}
 .about .contact a:hover{border-color:var(--accent);background:rgba(156,47,47,.05)}
 .orcid-dot{width:13px;height:13px;border-radius:50%;background:#A6CE39}
-.about-photo{aspect-ratio:3/4;border-radius:12px;background-image:var(--portrait-about);background-size:cover;background-position:center;background-color:#e3dccb;border:1px solid var(--line);display:grid;place-items:center}
-.about-photo .ph{font-family:var(--serif);font-style:italic;color:var(--faint);font-size:14px}
+.about-photo{aspect-ratio:3/4;border-radius:12px;background-image:var(--portrait-about);background-size:cover;background-position:center;background-color:#e3dccb;border:1px solid var(--line)}
 
 /* ---------- LIGHTBOX ---------- */
 .lb-bg{position:fixed;inset:0;z-index:1000;background:rgba(20,14,9,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .3s}
@@ -162,7 +159,6 @@ const HOME_IMG="https://raw.githubusercontent.com/siqiwu5471-lgtm/547/50f6e5e783
 const D={
  name:"Siqi Wu",
  roles:[{en:"Curator",zh:"策展人"},{en:"Heritage Researcher",zh:"文化遗产研究者"},{en:"AI Explorer",zh:"AI 探索者"}],
- photoHint:{en:"your portrait here",zh:"在此放入你的肖像"},
  hfnote:{en:"(Homepage image appears when the site is opened in a browser / published.)",zh:"(首页大图将在浏览器中打开或网站发布后显示。)"},
  nav:[{id:"home",no:"01",t:{en:"HOME",zh:"首页"}},{id:"research",no:"02",t:{en:"RESEARCH",zh:"研究"}},{id:"projects",no:"03",t:{en:"PROJECTS",zh:"项目"}},{id:"writing",no:"04",t:{en:"WRITING",zh:"写作"}},{id:"about",no:"05",t:{en:"ABOUT",zh:"关于"}}],
  ui:{archive:{en:"ARCHIVE",zh:"档案"},read:{en:"Read the paper ↗",zh:"阅读论文 ↗"},explore:{en:"Explore →",zh:"前往 →"},pending:{en:"Accepted · DOI pending",zh:"已接收 · DOI 待定"},email:"z5601507@zmail.unsw.edu.au",orcid:"0009-0008-7696-2229"},
@@ -179,18 +175,18 @@ const D={
 
  research:{intro:{en:"Peer-reviewed work on AI × cultural heritage — identification, conservation, value and safety.",zh:"关于 AI × 文化遗产的同行评审研究——识别、保护、价值与安全。"},
   items:[
-   {key:"ceramics",title:"Integrating Deep Learning & Machine Learning for Ceramic Artifact Classification and Market Value Prediction",venue:"npj Heritage Science · Q1 · Nature Portfolio · 2025",role:{en:"Co-first & Corresponding",zh:"共同一作 & 通讯"},doi:"10.1038/s40494-025-01886-6"},
-   {key:"computational",title:"Cultural Heritage Image Classification & Integrated Comprehensive Value Prediction Based on Deep Learning",venue:"Frontiers of Architectural Research · Q1 · 2026",role:{en:"Co-first & Corresponding",zh:"共同一作 & 通讯"},pending:true},
-   {key:"architecture",title:"Interpretable & Lightweight Fall Detection in a Heritage Gallery Using YOLOv11-SEFA for Edge Deployment",venue:"Scientific Reports · Q1 · Nature Portfolio · 2026",role:{en:"First Author",zh:"第一作者"},doi:"10.1038/s41598-026-39527-y"},
-   {key:"mural",title:"Dual-Path Detection & Physical Simulation for Sustainable Crack Evolution Monitoring in Ancient Chinese Murals",venue:"npj Heritage Science · Q1 · Nature Portfolio · 2026",role:{en:"Co-first & Corresponding",zh:"共同一作 & 通讯"},pending:true}
+   {key:"ceramics",img:"https://raw.githubusercontent.com/siqiwu5471-lgtm/547/refs/heads/main/%20-6.jpg",title:"Integrating Deep Learning & Machine Learning for Ceramic Artifact Classification and Market Value Prediction",venue:"npj Heritage Science · Q1 · Nature Portfolio · 2025",role:{en:"Co-first & Corresponding",zh:"共同一作 & 通讯"},doi:"10.1038/s40494-025-01886-6"},
+   {key:"computational",img:"https://raw.githubusercontent.com/siqiwu5471-lgtm/547/refs/heads/main/PBRMAX-pbr素材库平台.jpg",title:"Cultural Heritage Image Classification & Integrated Comprehensive Value Prediction Based on Deep Learning",venue:"Frontiers of Architectural Research · Q1 · 2026",role:{en:"Co-first & Corresponding",zh:"共同一作 & 通讯"},pending:true},
+   {key:"architecture",img:"https://raw.githubusercontent.com/siqiwu5471-lgtm/547/refs/heads/main/ROA%20Aberporth.jpg",title:"Interpretable & Lightweight Fall Detection in a Heritage Gallery Using YOLOv11-SEFA for Edge Deployment",venue:"Scientific Reports · Q1 · Nature Portfolio · 2026",role:{en:"First Author",zh:"第一作者"},doi:"10.1038/s41598-026-39527-y"},
+   {key:"mural",img:"https://raw.githubusercontent.com/siqiwu5471-lgtm/547/refs/heads/main/1196337401894386.jpg",title:"Dual-Path Detection & Physical Simulation for Sustainable Crack Evolution Monitoring in Ancient Chinese Murals",venue:"npj Heritage Science · Q1 · Nature Portfolio · 2026",role:{en:"Co-first & Corresponding",zh:"共同一作 & 通讯"},pending:true}
   ]},
 
  projects:{intro:{en:"Where research meets practice — built systems, exhibitions and stagecraft.",zh:"研究与实践的交汇——落地系统、展览与舞台。"},
   items:[
-   {key:"architecture",t:{en:"Heritage Gallery Safety System",zh:"遗产展厅安全系统"},d:{en:"Edge-deployable fall detection (YOLOv11-SEFA) for real museum spaces.",zh:"面向真实博物馆空间的边缘端跌倒检测(YOLOv11-SEFA)。"},doi:"10.1038/s41598-026-39527-y"},
-   {key:"computational",t:{en:"Optical Instrument Management System",zh:"光学仪器管理系统"},d:{en:"Registered software · Copyright No. 2023SR0786550.",zh:"登记软件 · 著作权登记号 2023SR0786550。"}},
-   {key:"performing",t:{en:"“Tianwen 天问” — Physical Theatre",zh:"《天问》— 形体剧场"},d:{en:"Assistant director · immersive multimedia stagework on the digital transformation of tradition.",zh:"助理导演 · 关于传统数字化转化的沉浸式多媒体舞台作品。"}},
-   {key:"jade",t:{en:"Curatorial Practice",zh:"策展实践"},d:{en:"Rochfort Gallery (Sydney) · Sina × Shenzhen Museum exhibitions.",zh:"Rochfort 画廊(悉尼)· 新浪 × 深圳博物馆展览。"}}
+   {key:"architecture",img:"https://raw.githubusercontent.com/siqiwu5471-lgtm/547/refs/heads/main/Visit%20Toffu%20for%20architectural%20presentation….jpg",t:{en:"Heritage Gallery Safety System",zh:"遗产展厅安全系统"},d:{en:"Edge-deployable fall detection (YOLOv11-SEFA) for real museum spaces.",zh:"面向真实博物馆空间的边缘端跌倒检测(YOLOv11-SEFA)。"},doi:"10.1038/s41598-026-39527-y"},
+   {key:"computational",img:"https://raw.githubusercontent.com/siqiwu5471-lgtm/547/refs/heads/main/549087379580626633.jpg",t:{en:"Optical Instrument Management System",zh:"光学仪器管理系统"},d:{en:"Registered software · Copyright No. 2023SR0786550.",zh:"登记软件 · 著作权登记号 2023SR0786550。"}},
+   {key:"performing",img:"https://raw.githubusercontent.com/siqiwu5471-lgtm/547/refs/heads/main/437834395041742753.jpg",t:{en:"“Tianwen 天问” — Physical Theatre",zh:"《天问》— 形体剧场"},d:{en:"Assistant director · immersive multimedia stagework on the digital transformation of tradition.",zh:"助理导演 · 关于传统数字化转化的沉浸式多媒体舞台作品。"}},
+   {key:"jade",img:"https://raw.githubusercontent.com/siqiwu5471-lgtm/547/refs/heads/main/LUNEL%20-%20exposition.jpg",t:{en:"Curatorial Practice",zh:"策展实践"},d:{en:"Rochfort Gallery (Sydney) · Sina × Shenzhen Museum exhibitions.",zh:"Rochfort 画廊(悉尼)· 新浪 × 深圳博物馆展览。"}}
   ]},
 
  writing:{intro:{en:"Selected writing, reviews and analytical work.",zh:"精选写作、评论与分析。"},
@@ -200,10 +196,6 @@ const D={
   note:{en:"Curatorial texts, exhibition essays and peer-review service (npj Heritage Science, Springer Nature, 2026). More writing coming soon.",zh:"策展文本、展览随笔与同行评审服务(npj Heritage Science,Springer Nature,2026)。更多文章陆续添加。"}},
 
  about:{intro:{en:"I work at the intersection of artificial intelligence and cultural heritage — using computer vision and interpretable deep learning to identify, conserve and reinterpret Chinese heritage. My background bridges curating, media production and machine learning.",zh:"我的工作位于人工智能与文化遗产的交叉点——以计算机视觉与可解释深度学习,识别、保护并重新诠释中国文化遗产。我的背景横跨策展、媒体制作与机器学习。"},
-  edu:[
-   {d:{en:"Master of Curating & Cultural Leadership",zh:"策展与文化领导力 · 硕士"},s:{en:"UNSW · WAM 86.4 · High Distinction",zh:"新南威尔士大学 · 加权 86.4 · High Distinction"},y:"2024–2025"},
-   {d:{en:"Bachelor of Television & Theatre Film",zh:"电视与戏剧影视 · 学士"},s:{en:"Shenzhen University · WAM 82.3",zh:"深圳大学 · 加权 82.3"},y:"2019–2023"}
-  ],
   facts:{en:"Based in Australia · UNSW Dean's List 2025 · Featured by NVIDIA · Peer reviewer for npj Heritage Science & Heritage (MDPI)",zh:"现居澳大利亚 · 2025 UNSW Dean's List · 获 NVIDIA 报道 · npj Heritage Science 与 Heritage(MDPI)审稿人"}}
 };
 
@@ -223,8 +215,9 @@ function ICON(k){const a='fill="none" stroke="currentColor" stroke-width="1.1" s
  if(k==="computational")return S(`<g><circle cx="28" cy="32" r="2.4"/><circle cx="28" cy="50" r="2.4"/><circle cx="28" cy="68" r="2.4"/><circle cx="50" cy="32" r="2.4"/><circle cx="50" cy="50" r="2.4"/><circle cx="50" cy="68" r="2.4"/></g><path opacity=".7" d="M30 32 L48 32 M30 32 L48 50 M30 50 L48 32 M30 50 L48 50 M30 50 L48 68 M30 68 L48 50 M30 68 L48 68"/><path opacity=".6" d="M52 32 L66 41 M52 50 L66 46 M52 68 L66 53"/><path d="M64 39 h15 v15 h-15 Z"/><path d="M70 33 h15 v15 h-15 Z"/><path d="M64 39 L70 33 M79 39 L85 33 M79 54 L85 48 M64 54 L70 48"/>`);
  return "";
 }
+function imgOrIcon(p,cls){return p.img?`<img class="${cls||''}" loading="lazy" src="${p.img}" alt="" onerror="this.remove()">`:"";}
 
-/* ---- HOME: hotspots + elegant fallback; image loaded async (non-blocking) ---- */
+/* ---- HOME: full-bleed bg image + float-on-hover icon clones ---- */
 function renderHome(){
  const navhs=[
   {l:1.5,t:2.5,w:13,h:5,go:"home"},{l:17,t:2.5,w:7.5,h:5,go:"home"},{l:25,t:2.5,w:9,h:5,go:"research"},
@@ -235,7 +228,7 @@ function renderHome(){
   {l:77,t:11,w:22,h:14},{l:74,t:36,w:25,h:14},{l:68,t:64,w:31,h:15}
  ];
  const nav=navhs.map(h=>`<a class="hs" data-go="${h.go}" style="left:${h.l}%;top:${h.t}%;width:${h.w}%;height:${h.h}%"></a>`).join("");
- const ico=icohs.map((h,i)=>`<button class="hs" data-i="${i}" title="${t(D.icons[i].cap)}" style="left:${h.l}%;top:${h.t}%;width:${h.w}%;height:${h.h}%"></button>`).join("");
+ const ico=icohs.map((h,i)=>{const bw=(10000/h.w).toFixed(2),bh=(10000/h.h).toFixed(2),bx=(h.l/(100-h.w)*100).toFixed(2),by=(h.t/(100-h.h)*100).toFixed(2);return `<button class="icon-pop" data-i="${i}" style="left:${h.l}%;top:${h.t}%;width:${h.w}%;height:${h.h}%;background-image:url('${HOME_IMG}');background-size:${bw}% ${bh}%;background-position:${bx}% ${by}%"></button>`;}).join("");
  $("#home").innerHTML=`<div class="home-full"><div class="hero-img-wrap" id="heroWrap">
    <div class="home-fallback" id="heroFb">
      <div class="hf-name">Siqi Wu</div>
@@ -243,10 +236,10 @@ function renderHome(){
      <div class="hf-note">${t(D.hfnote)}</div>
    </div>
    ${nav}${ico}
-   <a class="hs" data-go="about" title="About" style="left:88%;top:85%;width:11%;height:13%"></a>
+   <a class="hs" data-go="about" style="left:88%;top:85%;width:11%;height:13%"></a>
  </div></div>`;
  const im=new Image();
- im.onload=function(){const w=document.getElementById("heroWrap");if(w){w.style.backgroundImage="url('"+HOME_IMG+"')";const fb=document.getElementById("heroFb");if(fb)fb.style.display="none";}};
+ im.onload=function(){const w=document.getElementById("heroWrap");if(w){w.style.aspectRatio=im.naturalWidth+"/"+im.naturalHeight;w.style.backgroundImage="url('"+HOME_IMG+"')";const fb=document.getElementById("heroFb");if(fb)fb.style.display="none";}};
  im.src=HOME_IMG;
 }
 
@@ -254,7 +247,7 @@ function pubRow(p){
  const link=p.doi?`https://doi.org/${p.doi}`:null;
  const title=link?`<a href="${link}" target="_blank" rel="noopener">${p.title}</a>`:p.title;
  const status=p.pending?`<span class="tag pend">${t(D.ui.pending)}</span>`:`<a class="tag go" href="${link}" target="_blank" rel="noopener">DOI ↗</a>`;
- return `<div class="row"><div class="thumb">${ICON(p.key)}</div><div class="row-main">
+ return `<div class="row"><div class="thumb">${ICON(p.key)}${imgOrIcon(p)}</div><div class="row-main">
    <h3>${title}</h3><div class="row-venue">${p.venue}</div>
    <div class="tags"><span class="tag role">${t(p.role)}</span>${status}</div></div></div>`;
 }
@@ -278,24 +271,22 @@ function renderProjects(){
    <h2>Projects</h2><p>${t(D.projects.intro)}</p></div><div class="rule"></div>
    <div class="grid">${D.projects.items.map(p=>{
      const link=p.doi?`<a class="link" href="https://doi.org/${p.doi}" target="_blank" rel="noopener">${t(D.ui.read)}</a>`:"";
-     return `<div class="card"><div class="card-img">${ICON(p.key)}</div><div class="card-body"><h3>${t(p.t)}</h3><p>${t(p.d)}</p>${link}</div></div>`;
+     return `<div class="card"><div class="card-img">${ICON(p.key)}${imgOrIcon(p)}</div><div class="card-body"><h3>${t(p.t)}</h3><p>${t(p.d)}</p>${link}</div></div>`;
    }).join("")}</div></div>`;
 }
 function renderAbout(){
  const ab=D.about;
- const noPhoto=getComputedStyle(document.documentElement).getPropertyValue("--portrait-about").trim()==="none";
  $("#about").innerHTML=`<div class="wrap"><div class="eyebrow">05 · ${t({en:"About",zh:"关于"})}</div>
    <div class="about">
      <div><h2>${D.name}</h2><div class="roles">${D.roles.map(t).join(" · ")}</div>
        <p class="stmt">${t(ab.intro)}</p>
-       <div class="edu">${ab.edu.map(e=>`<div class="e"><h4>${t(e.d)}</h4><span>${t(e.s)}</span> · <span class="y">${e.y}</span></div>`).join("")}</div>
        <div class="facts">${t(ab.facts)}</div>
        <div class="contact">
          <a href="mailto:${D.ui.email}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>${D.ui.email}</a>
          <a href="https://orcid.org/${D.ui.orcid}" target="_blank" rel="noopener"><span class="orcid-dot"></span>ORCID ${D.ui.orcid} ↗</a>
        </div>
      </div>
-     <div class="about-photo">${noPhoto?`<span class="ph">${t(D.photoHint)}</span>`:""}</div>
+     <div class="about-photo"></div>
    </div></div>`;
 }
 function renderAll(){renderNav();renderHome();renderResearch();renderProjects();renderWriting();renderAbout();bindIcons();markNav();}
@@ -314,12 +305,12 @@ function openLB(i){const o=D.icons[i];let body;
  $("#lbBg").classList.add("open");$("#lb").classList.add("open");
 }
 function closeLB(){$("#lbBg").classList.remove("open");$("#lb").classList.remove("open");}
-function bindIcons(){document.querySelectorAll(".hero-img-wrap button.hs").forEach(b=>b.addEventListener("click",()=>openLB(+b.dataset.i)));}
+function bindIcons(){document.querySelectorAll(".hero-img-wrap button[data-i]").forEach(b=>b.addEventListener("click",()=>openLB(+b.dataset.i)));}
 $("#lbBg").addEventListener("click",closeLB);
 $("#lbClose").addEventListener("click",closeLB);
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeLB();});
 
-/* ---- router (pure JS — does NOT change the URL, so the preview never reloads) ---- */
+/* ---- router (pure JS — never changes the URL) ---- */
 const PAGES=["home","research","projects","writing","about"];
 let cur="home";
 function markNav(){document.querySelectorAll(".nav a").forEach(a=>a.classList.toggle("on",a.dataset.go===cur));}
