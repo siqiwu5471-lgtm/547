@@ -1,0 +1,339 @@
+<!-- SIQI WU — multi-page site. Navigation is pure JS (no URL/hash change, so the preview never reloads).
+     Home image loads async (non-blocking) with an elegant fallback if the sandbox blocks external images.
+     The image WILL appear when this page is opened in a real browser / published (e.g. GitHub Pages).
+     ABOUT photo: set --portrait-about in :root to a direct image url. -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
+<style>
+:root{
+  --portrait-about:none;
+  --serif:"Cormorant Garamond","EB Garamond",Garamond,Georgia,serif;
+  --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+}
+[data-theme="dark"]{--bg:#0e0b08;--fg:#efe6d6;--muted:#bcae97;--faint:#8b8070;--accent:#c2553f;--gold:#c9ad73;--line:rgba(216,178,94,.28);--card:rgba(245,235,218,.04);--bar:rgba(14,11,8,.5)}
+[data-theme="light"]{--bg:#efe9dd;--fg:#2a241d;--muted:#6a6052;--faint:#a39a89;--accent:#9c2f2f;--gold:#9a7b3a;--line:rgba(60,50,35,.16);--card:#f6f2e9;--bar:rgba(239,233,221,.78)}
+body.lang-zh{--serif:"Cormorant Garamond","Songti SC","STSong",serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--fg);-webkit-font-smoothing:antialiased;transition:background .5s,color .5s}
+a{color:inherit;text-decoration:none}
+.app{min-height:100vh;transition:background .5s}
+
+/* ---------- TOP BAR ---------- */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:80;display:flex;align-items:center;justify-content:space-between;
+  padding:14px clamp(16px,4vw,46px);background:var(--bar);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:background .5s}
+.wm{font-family:var(--serif);font-size:21px;letter-spacing:4px;font-weight:500;white-space:nowrap;cursor:pointer}
+.nav{display:flex;gap:clamp(8px,2vw,28px);flex-wrap:wrap}
+.nav a{font-family:var(--sans);font-size:11px;letter-spacing:2px;color:var(--muted);position:relative;padding:3px 0;transition:color .25s;white-space:nowrap;cursor:pointer}
+.nav a .no{color:var(--accent);margin-right:5px}
+.nav a:hover{color:var(--fg)}
+.nav a.on{color:var(--fg)}
+.nav a.on::after{content:"";position:absolute;left:0;right:0;bottom:-3px;height:1.5px;background:var(--accent)}
+.bar-r{display:flex;align-items:center;gap:14px}
+.archive{font-size:11px;letter-spacing:2px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.archive .ring{width:11px;height:11px;border:1.4px solid var(--muted);border-radius:50%}
+.lang{background:none;border:1px solid var(--line);border-radius:20px;padding:5px 11px;color:var(--faint);font-size:10px;letter-spacing:1px;display:flex;gap:5px;cursor:pointer;align-items:center}
+.lang .sep{opacity:.4}
+body.lang-en .lang [data-l=en],body.lang-zh .lang [data-l=zh]{color:var(--accent)}
+
+/* ---------- PAGE SHELL ---------- */
+.page{display:none}
+.page.active{display:block;animation:fade .6s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:18px}
+.wrap{max-width:1180px;margin:0 auto;padding:128px clamp(18px,4vw,46px) 90px}
+
+/* ---------- HOME (background image + clickable hotspots + elegant fallback) ---------- */
+.home-full{min-height:100vh;display:grid;place-items:center;background:#0e0b08;overflow:hidden}
+.hero-img-wrap{position:relative;aspect-ratio:3/2;width:min(100vw,calc(100vh*1.5));
+  background-size:contain;background-position:center;background-repeat:no-repeat;background-color:#0e0b08}
+.hs{position:absolute;border:none;background:transparent;cursor:pointer;border-radius:8px;transition:background .2s,box-shadow .2s;z-index:2}
+.hs:hover{background:rgba(216,178,94,.16);box-shadow:0 0 0 1px rgba(216,178,94,.45)}
+.home-fallback{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px}
+.home-fallback .hf-name{font-family:var(--serif);font-size:clamp(40px,8vw,72px);letter-spacing:3px;color:var(--fg)}
+.home-fallback .hf-roles{font-family:var(--serif);font-style:italic;color:var(--accent);font-size:clamp(16px,2.4vw,22px);margin-top:12px}
+.home-fallback .hf-note{font-family:var(--sans);font-size:11px;letter-spacing:1.5px;color:var(--faint);margin-top:26px;max-width:330px;line-height:1.7}
+
+/* ---------- LIGHT PAGE CONTENT ---------- */
+.page-head h2{font-family:var(--serif);font-weight:500;font-size:clamp(34px,5vw,62px);line-height:1.02;letter-spacing:.5px}
+.page-head p{font-family:var(--serif);font-style:italic;font-size:clamp(16px,2vw,20px);color:var(--muted);margin-top:14px;max-width:560px}
+.rule{height:1px;background:var(--line);margin:40px 0}
+.idx{display:flex;flex-direction:column}
+.row{display:flex;gap:26px;align-items:flex-start;padding:26px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:none}
+.thumb{flex:0 0 auto;width:92px;height:92px;border:1px solid var(--line);border-radius:8px;display:grid;place-items:center;color:var(--gold);background:var(--card);transition:.3s}
+.thumb svg{width:64%;height:64%;overflow:visible}
+.row:hover .thumb{transform:translateY(-3px);border-color:var(--accent)}
+.row-main{flex:1;min-width:0}
+.row-main h3{font-family:var(--serif);font-size:clamp(18px,2.3vw,24px);font-weight:500;line-height:1.25}
+.row-main h3 a{transition:color .25s}.row-main h3 a:hover{color:var(--accent)}
+.row-venue{font-size:12.5px;color:var(--faint);margin-top:8px;letter-spacing:.3px}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.tag{font-size:10.5px;letter-spacing:.5px;padding:4px 11px;border-radius:20px;border:1px solid var(--line);color:var(--muted)}
+.tag.role{color:var(--accent);border-color:rgba(156,47,47,.35)}
+.tag.go{color:var(--gold);cursor:pointer;transition:.25s}.tag.go:hover{background:var(--gold);color:#fff;border-color:var(--gold)}
+.tag.pend{color:var(--faint)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;transition:.3s;display:flex;flex-direction:column}
+.card:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(0,0,0,.08)}
+.card-img{height:150px;display:grid;place-items:center;color:var(--gold);border-bottom:1px solid var(--line);background:linear-gradient(135deg,rgba(154,123,58,.08),transparent)}
+.card-img svg{width:74px;height:74px;overflow:visible}
+.card-body{padding:20px 22px 24px}
+.card-body h3{font-family:var(--serif);font-size:21px;font-weight:500}
+.card-body p{font-size:14px;color:var(--muted);margin-top:8px;line-height:1.5}
+.card-body .link{display:inline-block;margin-top:14px;font-size:12px;letter-spacing:1px;color:var(--accent)}
+.about{display:grid;grid-template-columns:1.3fr 1fr;gap:54px;align-items:start}
+.about h2{font-family:var(--serif);font-weight:500;font-size:clamp(40px,6vw,76px);line-height:.98}
+.about .roles{font-family:var(--serif);font-style:italic;font-size:20px;color:var(--accent);margin:10px 0 26px}
+.about p.stmt{font-size:16px;line-height:1.7;color:var(--fg)}
+.about .edu{margin-top:30px;display:flex;flex-direction:column;gap:18px}
+.about .edu .e h4{font-family:var(--serif);font-size:20px;font-weight:500}
+.about .edu .e span{font-size:13px;color:var(--muted)}
+.about .edu .e .y{color:var(--accent);font-size:12px;letter-spacing:1px}
+.about .facts{margin-top:26px;font-size:13px;line-height:1.7;color:var(--muted);border-left:2px solid var(--accent);padding-left:16px}
+.about .contact{margin-top:26px;display:flex;flex-wrap:wrap;gap:12px}
+.about .contact a{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:30px;padding:10px 16px;font-size:13px;transition:.25s}
+.about .contact a:hover{border-color:var(--accent);background:rgba(156,47,47,.05)}
+.orcid-dot{width:13px;height:13px;border-radius:50%;background:#A6CE39}
+.about-photo{aspect-ratio:3/4;border-radius:12px;background-image:var(--portrait-about);background-size:cover;background-position:center;background-color:#e3dccb;border:1px solid var(--line);display:grid;place-items:center}
+.about-photo .ph{font-family:var(--serif);font-style:italic;color:var(--faint);font-size:14px}
+
+/* ---------- LIGHTBOX ---------- */
+.lb-bg{position:fixed;inset:0;z-index:1000;background:rgba(20,14,9,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .3s}
+.lb-bg.open{opacity:1;pointer-events:auto}
+.lb{position:fixed;z-index:1001;left:50%;top:50%;transform:translate(-50%,-46%);width:min(560px,92vw);
+  background:#f6f2e9;color:#2a241d;border-radius:16px;box-shadow:0 40px 90px rgba(0,0,0,.5);
+  opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;overflow:hidden}
+.lb.open{opacity:1;transform:translate(-50%,-50%);pointer-events:auto}
+.lb-inner{display:flex}
+.lb-art{flex:0 0 190px;background:linear-gradient(160deg,#ece4d3,#e0d6bf);display:grid;place-items:center;color:#9a7b3a;border-right:1px solid rgba(60,50,35,.12)}
+.lb-art svg{width:118px;height:118px;overflow:visible}
+.lb-txt{padding:30px 30px 32px;flex:1}
+.lb-txt .cap{font-size:11px;letter-spacing:2px;color:#9c2f2f}
+.lb-txt .sub{font-family:var(--serif);font-style:italic;font-size:17px;color:#6a6052;margin:8px 0 16px}
+.lb-txt h3{font-family:var(--serif);font-size:20px;font-weight:500;line-height:1.3}
+.lb-txt .ven{font-size:12px;color:#a39a89;margin-top:8px}
+.lb-txt .act{display:inline-block;margin-top:20px;font-size:12px;letter-spacing:1px;padding:10px 18px;border-radius:30px;background:#9c2f2f;color:#f6efe2;transition:.25s;cursor:pointer}
+.lb-txt .act:hover{background:#7d2424}
+.lb-close{position:absolute;top:12px;right:14px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(60,50,35,.2);background:none;color:#6a6052;font-size:18px;cursor:pointer;display:grid;place-items:center;transition:.25s}
+.lb-close:hover{transform:rotate(90deg);border-color:#9c2f2f;color:#9c2f2f}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width:900px){
+  .topbar{flex-wrap:wrap;gap:8px 14px;padding:12px 16px}
+  .nav{gap:12px}.nav a{font-size:10px;letter-spacing:1px}
+  .home-full{min-height:auto;padding-top:90px;padding-bottom:30px}
+  .hero-img-wrap{width:100vw}
+  .about,.grid{grid-template-columns:1fr;gap:30px}
+  .lb-inner{flex-direction:column}.lb-art{flex:0 0 150px;border-right:none;border-bottom:1px solid rgba(60,50,35,.12)}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto}}
+</style>
+
+<div class="app" data-theme="dark" data-page="home">
+  <header class="topbar">
+    <a class="wm" data-go="home">SIQI WU</a>
+    <nav class="nav" id="nav"></nav>
+    <div class="bar-r">
+      <span class="archive" id="arch"><span></span><span class="ring"></span></span>
+      <button class="lang" id="langBtn"><span data-l="en">EN</span><span class="sep">/</span><span data-l="zh">中</span></button>
+    </div>
+  </header>
+
+  <main>
+    <section class="page active" data-page="home" id="home"></section>
+    <section class="page" data-page="research" id="research"></section>
+    <section class="page" data-page="projects" id="projects"></section>
+    <section class="page" data-page="writing" id="writing"></section>
+    <section class="page" data-page="about" id="about"></section>
+  </main>
+</div>
+
+<div class="lb-bg" id="lbBg"></div>
+<div class="lb" id="lb"><button class="lb-close" id="lbClose">&times;</button><div class="lb-inner" id="lbInner"></div></div>
+
+<script>
+const HOME_IMG="https://raw.githubusercontent.com/siqiwu5471-lgtm/547/50f6e5e783b55dea64565b16fd51661069e2bf7a/e89ff5bde00b56f53fd8a054444c585137975bf82224508732cdb66761423c51.png";
+
+/* ================= EDIT CONTENT HERE ================= */
+const D={
+ name:"Siqi Wu",
+ roles:[{en:"Curator",zh:"策展人"},{en:"Heritage Researcher",zh:"文化遗产研究者"},{en:"AI Explorer",zh:"AI 探索者"}],
+ photoHint:{en:"your portrait here",zh:"在此放入你的肖像"},
+ hfnote:{en:"(Homepage image appears when the site is opened in a browser / published.)",zh:"(首页大图将在浏览器中打开或网站发布后显示。)"},
+ nav:[{id:"home",no:"01",t:{en:"HOME",zh:"首页"}},{id:"research",no:"02",t:{en:"RESEARCH",zh:"研究"}},{id:"projects",no:"03",t:{en:"PROJECTS",zh:"项目"}},{id:"writing",no:"04",t:{en:"WRITING",zh:"写作"}},{id:"about",no:"05",t:{en:"ABOUT",zh:"关于"}}],
+ ui:{archive:{en:"ARCHIVE",zh:"档案"},read:{en:"Read the paper ↗",zh:"阅读论文 ↗"},explore:{en:"Explore →",zh:"前往 →"},pending:{en:"Accepted · DOI pending",zh:"已接收 · DOI 待定"},email:"z5601507@zmail.unsw.edu.au",orcid:"0009-0008-7696-2229"},
+
+ icons:[
+  {key:"jade",cap:{en:"JADE ARTIFACTS",zh:"玉器"},sub:{en:"objects carry memories.",zh:"器物承载记忆。"},act:{page:"about"}},
+  {key:"mural",cap:{en:"MURALS",zh:"壁画"},sub:{en:"painted stories across time.",zh:"跨越时间的图像叙事。"},act:{page:"research"}},
+  {key:"architecture",cap:{en:"ARCHITECTURE",zh:"古建筑"},sub:{en:"spaces hold histories.",zh:"空间收藏历史。"},act:{page:"research"}},
+  {key:"ceramics",cap:{en:"CERAMICS",zh:"陶瓷"},sub:{en:"shapes of civilizations.",zh:"文明的造型。"},act:{doi:"10.1038/s40494-025-01886-6",title:"Ceramic Artifact Classification & Market Value Prediction",venue:"npj Heritage Science · 2025"}},
+  {key:"performing",cap:{en:"PERFORMING ARTS",zh:"表演艺术"},sub:{en:"my culture, my story.",zh:"我的文化,我的故事。"},act:{page:"projects"}},
+  {key:"heritage",cap:{en:"HERITAGE STUDIES",zh:"遗产研究"},sub:{en:"every detail matters.",zh:"每个细节都重要。"},act:{page:"research"}},
+  {key:"computational",cap:{en:"COMPUTATIONAL HERITAGE",zh:"计算遗产"},sub:{en:"machine learning reveals patterns beyond sight.",zh:"机器学习揭示肉眼之外的规律。"},act:{doi:"10.1038/s41598-026-39527-y",title:"Lightweight Fall Detection in a Heritage Gallery (YOLOv11-SEFA)",venue:"Scientific Reports · 2026"}}
+ ],
+
+ research:{intro:{en:"Peer-reviewed work on AI × cultural heritage — identification, conservation, value and safety.",zh:"关于 AI × 文化遗产的同行评审研究——识别、保护、价值与安全。"},
+  items:[
+   {key:"ceramics",title:"Integrating Deep Learning & Machine Learning for Ceramic Artifact Classification and Market Value Prediction",venue:"npj Heritage Science · Q1 · Nature Portfolio · 2025",role:{en:"Co-first & Corresponding",zh:"共同一作 & 通讯"},doi:"10.1038/s40494-025-01886-6"},
+   {key:"computational",title:"Cultural Heritage Image Classification & Integrated Comprehensive Value Prediction Based on Deep Learning",venue:"Frontiers of Architectural Research · Q1 · 2026",role:{en:"Co-first & Corresponding",zh:"共同一作 & 通讯"},pending:true},
+   {key:"architecture",title:"Interpretable & Lightweight Fall Detection in a Heritage Gallery Using YOLOv11-SEFA for Edge Deployment",venue:"Scientific Reports · Q1 · Nature Portfolio · 2026",role:{en:"First Author",zh:"第一作者"},doi:"10.1038/s41598-026-39527-y"},
+   {key:"mural",title:"Dual-Path Detection & Physical Simulation for Sustainable Crack Evolution Monitoring in Ancient Chinese Murals",venue:"npj Heritage Science · Q1 · Nature Portfolio · 2026",role:{en:"Co-first & Corresponding",zh:"共同一作 & 通讯"},pending:true}
+  ]},
+
+ projects:{intro:{en:"Where research meets practice — built systems, exhibitions and stagecraft.",zh:"研究与实践的交汇——落地系统、展览与舞台。"},
+  items:[
+   {key:"architecture",t:{en:"Heritage Gallery Safety System",zh:"遗产展厅安全系统"},d:{en:"Edge-deployable fall detection (YOLOv11-SEFA) for real museum spaces.",zh:"面向真实博物馆空间的边缘端跌倒检测(YOLOv11-SEFA)。"},doi:"10.1038/s41598-026-39527-y"},
+   {key:"computational",t:{en:"Optical Instrument Management System",zh:"光学仪器管理系统"},d:{en:"Registered software · Copyright No. 2023SR0786550.",zh:"登记软件 · 著作权登记号 2023SR0786550。"}},
+   {key:"performing",t:{en:"“Tianwen 天问” — Physical Theatre",zh:"《天问》— 形体剧场"},d:{en:"Assistant director · immersive multimedia stagework on the digital transformation of tradition.",zh:"助理导演 · 关于传统数字化转化的沉浸式多媒体舞台作品。"}},
+   {key:"jade",t:{en:"Curatorial Practice",zh:"策展实践"},d:{en:"Rochfort Gallery (Sydney) · Sina × Shenzhen Museum exhibitions.",zh:"Rochfort 画廊(悉尼)· 新浪 × 深圳博物馆展览。"}}
+  ]},
+
+ writing:{intro:{en:"Selected writing, reviews and analytical work.",zh:"精选写作、评论与分析。"},
+  items:[
+   {key:"computational",title:"A Review of Racial & Gender Discrimination in Digital Games — Statistical Analysis Using VOSviewer",venue:"ACM Digital Library · Conference Paper · 2024",role:{en:"Co-author",zh:"合著"},doi:"10.1145/3726010.3726037"}
+  ],
+  note:{en:"Curatorial texts, exhibition essays and peer-review service (npj Heritage Science, Springer Nature, 2026). More writing coming soon.",zh:"策展文本、展览随笔与同行评审服务(npj Heritage Science,Springer Nature,2026)。更多文章陆续添加。"}},
+
+ about:{intro:{en:"I work at the intersection of artificial intelligence and cultural heritage — using computer vision and interpretable deep learning to identify, conserve and reinterpret Chinese heritage. My background bridges curating, media production and machine learning.",zh:"我的工作位于人工智能与文化遗产的交叉点——以计算机视觉与可解释深度学习,识别、保护并重新诠释中国文化遗产。我的背景横跨策展、媒体制作与机器学习。"},
+  edu:[
+   {d:{en:"Master of Curating & Cultural Leadership",zh:"策展与文化领导力 · 硕士"},s:{en:"UNSW · WAM 86.4 · High Distinction",zh:"新南威尔士大学 · 加权 86.4 · High Distinction"},y:"2024–2025"},
+   {d:{en:"Bachelor of Television & Theatre Film",zh:"电视与戏剧影视 · 学士"},s:{en:"Shenzhen University · WAM 82.3",zh:"深圳大学 · 加权 82.3"},y:"2019–2023"}
+  ],
+  facts:{en:"Based in Australia · UNSW Dean's List 2025 · Featured by NVIDIA · Peer reviewer for npj Heritage Science & Heritage (MDPI)",zh:"现居澳大利亚 · 2025 UNSW Dean's List · 获 NVIDIA 报道 · npj Heritage Science 与 Heritage(MDPI)审稿人"}}
+};
+
+/* ================= ENGINE ================= */
+let lang="en";
+const t=v=>v==null?"":(typeof v==="string"?v:(v[lang]??v.en??""));
+const $=s=>document.querySelector(s);
+
+function ICON(k){const a='fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"';
+ const S=g=>`<svg viewBox="0 0 100 100" ${a}>${g}</svg>`;
+ if(k==="jade")return S(`<circle cx="50" cy="50" r="34"/><circle cx="50" cy="50" r="14"/><circle cx="50" cy="50" r="26" stroke-dasharray="1.5 4" opacity=".6"/><circle cx="50" cy="50" r="40" opacity=".35"/>`);
+ if(k==="mural")return S(`<circle cx="50" cy="40" r="21" opacity=".5"/><path d="M50 14 q3 5 0 9 q-3 -4 0 -9"/><circle cx="50" cy="36" r="7"/><path d="M37 80 Q38 56 50 49 Q62 56 63 80"/><path d="M41 67 Q50 71 59 67"/><path d="M33 82 Q50 90 67 82"/><path d="M40 82 q10 5 20 0"/>`);
+ if(k==="architecture")return S(`<path d="M20 45 Q31 29 50 27 Q69 29 80 45"/><line x1="50" y1="27" x2="50" y2="20"/><line x1="20" y1="46" x2="80" y2="46"/><line x1="30" y1="47" x2="30" y2="74"/><line x1="42" y1="47" x2="42" y2="74"/><line x1="58" y1="47" x2="58" y2="74"/><line x1="70" y1="47" x2="70" y2="74"/><line x1="24" y1="74" x2="76" y2="74"/><line x1="19" y1="80" x2="81" y2="80"/>`);
+ if(k==="ceramics")return S(`<path d="M50 18 C44 18 42 22 44 28 C40 36 30 44 30 60 C30 78 40 84 50 84 C60 84 70 78 70 60 C70 44 60 36 56 28 C58 22 56 18 50 18 Z"/><line x1="44" y1="20" x2="56" y2="20"/><path d="M34 56 Q50 51 66 56"/><path d="M35 65 Q50 70 65 65"/>`);
+ if(k==="performing")return S(`<path d="M28 41 Q50 13 72 41"/><line x1="50" y1="17" x2="50" y2="41"/><line x1="39" y1="23" x2="41" y2="42"/><line x1="61" y1="23" x2="59" y2="42"/><path d="M30 41 Q50 49 70 41"/><line x1="34" y1="45" x2="32" y2="68"/><line x1="66" y1="45" x2="68" y2="68"/><line x1="50" y1="47" x2="50" y2="64"/><circle cx="32" cy="70" r="2"/><circle cx="68" cy="70" r="2"/><circle cx="50" cy="66" r="2"/>`);
+ if(k==="heritage")return S(`<path d="M34 45 Q34 70 50 73 Q66 70 66 45"/><line x1="31" y1="45" x2="69" y2="45"/><path d="M37 45 Q37 35 43 35"/><path d="M63 45 Q63 35 57 35"/><path d="M36 55 Q50 59 64 55"/><line x1="40" y1="73" x2="38" y2="83"/><line x1="60" y1="73" x2="62" y2="83"/><line x1="50" y1="73" x2="50" y2="85"/>`);
+ if(k==="computational")return S(`<g><circle cx="28" cy="32" r="2.4"/><circle cx="28" cy="50" r="2.4"/><circle cx="28" cy="68" r="2.4"/><circle cx="50" cy="32" r="2.4"/><circle cx="50" cy="50" r="2.4"/><circle cx="50" cy="68" r="2.4"/></g><path opacity=".7" d="M30 32 L48 32 M30 32 L48 50 M30 50 L48 32 M30 50 L48 50 M30 50 L48 68 M30 68 L48 50 M30 68 L48 68"/><path opacity=".6" d="M52 32 L66 41 M52 50 L66 46 M52 68 L66 53"/><path d="M64 39 h15 v15 h-15 Z"/><path d="M70 33 h15 v15 h-15 Z"/><path d="M64 39 L70 33 M79 39 L85 33 M79 54 L85 48 M64 54 L70 48"/>`);
+ return "";
+}
+
+/* ---- HOME: hotspots + elegant fallback; image loaded async (non-blocking) ---- */
+function renderHome(){
+ const navhs=[
+  {l:1.5,t:2.5,w:13,h:5,go:"home"},{l:17,t:2.5,w:7.5,h:5,go:"home"},{l:25,t:2.5,w:9,h:5,go:"research"},
+  {l:34,t:2.5,w:8.5,h:5,go:"projects"},{l:42.5,t:2.5,w:7.5,h:5,go:"writing"},{l:50,t:2.5,w:7,h:5,go:"about"},{l:90,t:2.5,w:9,h:5,go:"research"}
+ ];
+ const icohs=[
+  {l:18,t:11,w:28,h:14},{l:17,t:34,w:25,h:14},{l:3,t:58,w:27,h:15},{l:9,t:78,w:27,h:15},
+  {l:77,t:11,w:22,h:14},{l:74,t:36,w:25,h:14},{l:68,t:64,w:31,h:15}
+ ];
+ const nav=navhs.map(h=>`<a class="hs" data-go="${h.go}" style="left:${h.l}%;top:${h.t}%;width:${h.w}%;height:${h.h}%"></a>`).join("");
+ const ico=icohs.map((h,i)=>`<button class="hs" data-i="${i}" title="${t(D.icons[i].cap)}" style="left:${h.l}%;top:${h.t}%;width:${h.w}%;height:${h.h}%"></button>`).join("");
+ $("#home").innerHTML=`<div class="home-full"><div class="hero-img-wrap" id="heroWrap">
+   <div class="home-fallback" id="heroFb">
+     <div class="hf-name">Siqi Wu</div>
+     <div class="hf-roles">${D.roles.map(t).join(" · ")}</div>
+     <div class="hf-note">${t(D.hfnote)}</div>
+   </div>
+   ${nav}${ico}
+   <a class="hs" data-go="about" title="About" style="left:88%;top:85%;width:11%;height:13%"></a>
+ </div></div>`;
+ const im=new Image();
+ im.onload=function(){const w=document.getElementById("heroWrap");if(w){w.style.backgroundImage="url('"+HOME_IMG+"')";const fb=document.getElementById("heroFb");if(fb)fb.style.display="none";}};
+ im.src=HOME_IMG;
+}
+
+function pubRow(p){
+ const link=p.doi?`https://doi.org/${p.doi}`:null;
+ const title=link?`<a href="${link}" target="_blank" rel="noopener">${p.title}</a>`:p.title;
+ const status=p.pending?`<span class="tag pend">${t(D.ui.pending)}</span>`:`<a class="tag go" href="${link}" target="_blank" rel="noopener">DOI ↗</a>`;
+ return `<div class="row"><div class="thumb">${ICON(p.key)}</div><div class="row-main">
+   <h3>${title}</h3><div class="row-venue">${p.venue}</div>
+   <div class="tags"><span class="tag role">${t(p.role)}</span>${status}</div></div></div>`;
+}
+function renderNav(){
+ $("#nav").innerHTML=D.nav.map(n=>`<a data-go="${n.id}"><span class="no">${n.no}</span>${t(n.t)}</a>`).join("");
+ $("#arch").querySelector("span").textContent=t(D.ui.archive);
+}
+function renderResearch(){
+ $("#research").innerHTML=`<div class="wrap"><div class="page-head"><div class="eyebrow">02 · ${t({en:"Research",zh:"研究"})}</div>
+   <h2>Research</h2><p>${t(D.research.intro)}</p></div><div class="rule"></div>
+   <div class="idx">${D.research.items.map(pubRow).join("")}</div></div>`;
+}
+function renderWriting(){
+ $("#writing").innerHTML=`<div class="wrap"><div class="page-head"><div class="eyebrow">04 · ${t({en:"Writing",zh:"写作"})}</div>
+   <h2>Writing</h2><p>${t(D.writing.intro)}</p></div><div class="rule"></div>
+   <div class="idx">${D.writing.items.map(pubRow).join("")}</div>
+   <div class="facts" style="margin-top:40px;border-left:2px solid var(--accent);padding-left:16px;font-size:14px;line-height:1.7;color:var(--muted)">${t(D.writing.note)}</div></div>`;
+}
+function renderProjects(){
+ $("#projects").innerHTML=`<div class="wrap"><div class="page-head"><div class="eyebrow">03 · ${t({en:"Projects",zh:"项目"})}</div>
+   <h2>Projects</h2><p>${t(D.projects.intro)}</p></div><div class="rule"></div>
+   <div class="grid">${D.projects.items.map(p=>{
+     const link=p.doi?`<a class="link" href="https://doi.org/${p.doi}" target="_blank" rel="noopener">${t(D.ui.read)}</a>`:"";
+     return `<div class="card"><div class="card-img">${ICON(p.key)}</div><div class="card-body"><h3>${t(p.t)}</h3><p>${t(p.d)}</p>${link}</div></div>`;
+   }).join("")}</div></div>`;
+}
+function renderAbout(){
+ const ab=D.about;
+ const noPhoto=getComputedStyle(document.documentElement).getPropertyValue("--portrait-about").trim()==="none";
+ $("#about").innerHTML=`<div class="wrap"><div class="eyebrow">05 · ${t({en:"About",zh:"关于"})}</div>
+   <div class="about">
+     <div><h2>${D.name}</h2><div class="roles">${D.roles.map(t).join(" · ")}</div>
+       <p class="stmt">${t(ab.intro)}</p>
+       <div class="edu">${ab.edu.map(e=>`<div class="e"><h4>${t(e.d)}</h4><span>${t(e.s)}</span> · <span class="y">${e.y}</span></div>`).join("")}</div>
+       <div class="facts">${t(ab.facts)}</div>
+       <div class="contact">
+         <a href="mailto:${D.ui.email}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>${D.ui.email}</a>
+         <a href="https://orcid.org/${D.ui.orcid}" target="_blank" rel="noopener"><span class="orcid-dot"></span>ORCID ${D.ui.orcid} ↗</a>
+       </div>
+     </div>
+     <div class="about-photo">${noPhoto?`<span class="ph">${t(D.photoHint)}</span>`:""}</div>
+   </div></div>`;
+}
+function renderAll(){renderNav();renderHome();renderResearch();renderProjects();renderWriting();renderAbout();bindIcons();markNav();}
+
+/* ---- lightbox ---- */
+function openLB(i){const o=D.icons[i];let body;
+ if(o.act&&o.act.doi){
+   body=`<div class="lb-art">${ICON(o.key)}</div><div class="lb-txt"><div class="cap">${t(o.cap)}</div>
+     <div class="sub">${t(o.sub)}</div><h3>${o.act.title}</h3><div class="ven">${o.act.venue}</div>
+     <a class="act" href="https://doi.org/${o.act.doi}" target="_blank" rel="noopener">${t(D.ui.read)}</a></div>`;
+ }else{
+   body=`<div class="lb-art">${ICON(o.key)}</div><div class="lb-txt"><div class="cap">${t(o.cap)}</div>
+     <div class="sub">${t(o.sub)}</div><span class="act" data-go="${o.act.page}">${t(D.ui.explore)}</span></div>`;
+ }
+ $("#lbInner").innerHTML=body;
+ $("#lbBg").classList.add("open");$("#lb").classList.add("open");
+}
+function closeLB(){$("#lbBg").classList.remove("open");$("#lb").classList.remove("open");}
+function bindIcons(){document.querySelectorAll(".hero-img-wrap button.hs").forEach(b=>b.addEventListener("click",()=>openLB(+b.dataset.i)));}
+$("#lbBg").addEventListener("click",closeLB);
+$("#lbClose").addEventListener("click",closeLB);
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeLB();});
+
+/* ---- router (pure JS — does NOT change the URL, so the preview never reloads) ---- */
+const PAGES=["home","research","projects","writing","about"];
+let cur="home";
+function markNav(){document.querySelectorAll(".nav a").forEach(a=>a.classList.toggle("on",a.dataset.go===cur));}
+function go(id){if(!PAGES.includes(id))id="home";cur=id;
+ document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.dataset.page===id));
+ const app=$(".app");app.dataset.theme=id==="home"?"dark":"light";app.dataset.page=id;
+ markNav();closeLB();window.scrollTo(0,0);}
+document.addEventListener("click",e=>{const el=e.target.closest("[data-go]");if(el){e.preventDefault();go(el.dataset.go);}});
+
+/* ---- language ---- */
+function toggleLang(){lang=lang==="en"?"zh":"en";document.body.className=lang==="zh"?"lang-zh":"";renderAll();}
+$("#langBtn").addEventListener("click",toggleLang);
+
+/* ---- init ---- */
+renderAll();
+go("home");
+</script>
