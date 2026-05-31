@@ -152,6 +152,26 @@ body.lang-en .lang [data-l=en],body.lang-zh .lang [data-l=zh]{color:var(--accent
 .thumb.has-photo img{object-fit:contain!important;mix-blend-mode:multiply;filter:contrast(1.03);}
 #writing .thumb.has-photo img{mix-blend-mode:normal!important;filter:none!important;}
 @media (max-width:900px){.home-full{min-height:100vh!important;min-height:100dvh!important;padding-top:74px!important;background:#0e0b08!important}.hero-img-wrap{width:100vw!important;aspect-ratio:1536/1024!important;background-size:100% 100%!important}.hs[data-i]::before{width:76px;height:76px}.hs[data-i]::after{top:calc(50% + 36px);font-size:9.5px;letter-spacing:4px}}
+/* ---- MOBILE HOME: image on top, readable intro + tappable entry cards below ---- */
+.home-mobile{display:none}
+@media (max-width:900px){
+  .home-full{display:flex!important;flex-direction:column;align-items:stretch;justify-content:flex-start;overflow:visible!important}
+  .hero-img-wrap{flex:none}
+  .hero-img-wrap .hs{display:none!important}
+  .home-mobile{display:block;background:#0e0b08;padding:24px 18px 46px}
+  .m-intro{padding:2px 2px 20px;border-bottom:1px solid var(--line)}
+  .m-roles{font-family:var(--sans);font-size:10.5px;letter-spacing:3px;text-transform:uppercase;color:var(--gold)}
+  .m-tag{font-family:var(--serif);font-size:25px;line-height:1.25;color:var(--fg);margin-top:10px}
+  .m-cards{display:flex;flex-direction:column;gap:12px;margin-top:24px}
+  .m-card{display:flex;align-items:center;gap:15px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px 16px;color:var(--fg);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .2s,background .2s}
+  .m-card:active{background:rgba(245,235,218,.08);border-color:var(--gold)}
+  .m-card-art{flex:0 0 44px;height:44px;color:var(--gold);display:grid;place-items:center}
+  .m-card-art svg{width:100%;height:100%;display:block}
+  .m-card-txt{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px}
+  .m-card-cap{font-family:var(--sans);font-size:11.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--fg)}
+  .m-card-sub{font-family:var(--serif);font-style:italic;font-size:15px;line-height:1.3;color:var(--muted)}
+  .m-card-go{flex:0 0 auto;color:var(--gold);font-size:18px;opacity:.65}
+}
 
 </style>
 
@@ -183,6 +203,7 @@ const HOME_IMG="https://raw.githubusercontent.com/siqiwu5471-lgtm/547/50f6e5e783
 /* ================= EDIT CONTENT HERE ================= */
 const D={
  name:"Siqi Wu",
+ tagline:{en:"I research the past, decode patterns, and reimagine the future.",zh:"我研究过去，解码规律，重新构想未来。"},
  roles:[{en:"Curator",zh:"策展人"},{en:"Heritage Researcher",zh:"文化遗产研究者"},{en:"AI Explorer",zh:"AI 探索者"}],
  photoHint:{en:"your portrait here",zh:"在此放入你的肖像"},
  hfnote:{en:"(Homepage image appears when the site is opened in a browser / published.)",zh:"（首页大图将在浏览器中打开或网站发布后显示。）"},
@@ -288,12 +309,25 @@ function renderHome(){
    const item=D.icons[idx] || D.icons[0];
    return `<button class="hs" data-i="${idx}" data-key="${h.key}" data-label="${t(item.cap)}" style="left:${h.l}%;top:${h.t}%;width:${h.w}%;height:${h.h}%"></button>`;
  }).join("");
+ const mcards=D.icons.map((o,i)=>`<button class="m-card" data-i="${i}">
+     <span class="m-card-art">${ICON(o.key)}</span>
+     <span class="m-card-txt"><span class="m-card-cap">${t(o.cap)}</span><span class="m-card-sub">${t(o.sub)}</span></span>
+     <span class="m-card-go" aria-hidden="true">→</span>
+   </button>`).join("");
  $("#home").innerHTML=`<div class="home-full"><div class="hero-img-wrap" id="heroWrap">
    <div class="home-fallback" id="heroFb"></div>
    <div class="hero-mask" style="position:absolute;left:2.21%;top:50.88%;width:4.11%;height:6.49%;background:#120f0c;pointer-events:none;z-index:1"></div>
    ${nav}${ico}
    <a class="hs" data-go="about" style="left:88%;top:85%;width:11%;height:13%"></a>
- </div></div>`;
+ </div>
+ <div class="home-mobile">
+   <div class="m-intro">
+     <div class="m-roles">${D.roles.map(t).join(" · ")}</div>
+     <p class="m-tag">${t(D.tagline)}</p>
+   </div>
+   <div class="m-cards">${mcards}</div>
+ </div>
+ </div>`;
 }
 
 function pubRow(p){
@@ -362,7 +396,7 @@ function openLB(i){const o=D.icons[i];let body;
  $("#lbBg").classList.add("open");$("#lb").classList.add("open");
 }
 function closeLB(){$("#lbBg").classList.remove("open");$("#lb").classList.remove("open");}
-function bindIcons(){document.querySelectorAll(".hero-img-wrap button[data-i]").forEach(b=>b.addEventListener("click",()=>openLB(+b.dataset.i)));}
+function bindIcons(){document.querySelectorAll("#home button[data-i]").forEach(b=>b.addEventListener("click",()=>openLB(+b.dataset.i)));}
 $("#lbBg").addEventListener("click",closeLB);
 $("#lbClose").addEventListener("click",closeLB);
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeLB();});
